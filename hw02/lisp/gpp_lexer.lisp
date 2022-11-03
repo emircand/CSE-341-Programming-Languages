@@ -1,0 +1,6 @@
+(setq keyword-syntax (list "and" "or" "not" "equal" "less" "nil" "list" "append" "concat" "set" "deffun" "for" "if" "exit" "load" "disp" "true" "false"))
+(setq operator-syntax(list "+" "-" "/" "%" "*" "(" ")" "**" ","))
+(setq keyword-token(list "KW_AND" "KW_OR" "KW_NOT" "KW_EQUAL" "KW_LESS" "KW_NIL" "KW_LIST" "KW_APPEND" "KW_CONCAT" "KW_SET" "KW_DEFFUN" "KW_FOR" "KW_IF" "KW_EXIT" "KW_LOAD" "KW_DISP" "KW_TRUE" "KW_FALSE"))
+(setq operator-token(list "OP_PLUS" "OP_MINUS" "OP_DIV" "OP_DIV2" "OP_MULT" "OP_OP" "OP_CP" "OP_DBLMULT" "OP_COMMA"))
+(setq space (list "\n" "\t" " "))
+(setq comment ";;")

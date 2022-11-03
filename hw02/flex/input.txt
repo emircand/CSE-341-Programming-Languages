@@ -6,5 +6,5 @@
  (+ x (sumup (- x 1)))
  )
  )
-(list 1 2 123)
+(list 1 2 123f12)
 (liste 1 2 3) 

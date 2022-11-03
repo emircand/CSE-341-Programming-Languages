@@ -44,7 +44,7 @@ OP_COMMA		","
 /***types***/
 VALUEI          [1-9][0-9]* | [0-9]
 VALUEF 			[1-9][0-9]*[.][0-9]*
-ID				[a-zA-Z][a-zA-Z0-9]*
+ID				[A-Za-z0-9_]*
 VALUESTR        ["]*[A-Za-z0-9_]*["] 
 COMMENT			";;".*
 
@@ -82,22 +82,14 @@ COMMENT			";;".*
 [ \t\n]  {;}
 [1-9]+[0-9]*                {printf("%s: VALUEI\n", yytext);}
 [0]                         {printf("%s: VALUEI\n", yytext);}
-[1-9][0-9]*[.][0-9]*        {printf("%s: VALUEF\n", yytext);}
+[1-9][0-9]*[f][0-9]*        {printf("%s: VALUEF\n", yytext);}
 ["]*[A-Za-z0-9_]*["]        {printf("%s: VALUESTR\n", yytext);}
 
 
-[a-zA-Z][a-zA-Z0-9]*    {printf("%s: IDENTIFIER\n", yytext);}/*---Identifiers---*/
+[A-Za-z0-9_]*               {printf("%s: IDENTIFIER\n", yytext);}/*---Identifiers---*/
 
 
-
-[a-zA-Z]*[,+-/*]	 	  	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);} 
-[+][A-zA-Z0-9,-/*+]*	 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}	
-[,][A-zA-Z0-9+-/*,]*	 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}
-[-][A-zA-Z0-9+,/*-]*	 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}	
-[/][A-zA-Z0-9+-,*/]*	 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}
-[*][A-zA-Z0-9+-,/*]*	 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}
 [[:digit:]]+[[:alpha:]]  	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}
-[[:digit:]]+[,+-/*]   	 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}
 [0][0-9]*				 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}                       	
 (.) 	 				 	  {printf("SYNTAX ERROR %s \n", yytext); exit(1);}	
 %%
