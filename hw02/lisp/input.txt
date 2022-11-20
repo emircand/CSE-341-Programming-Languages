@@ -1,0 +1,9 @@
+;;helloworld.g++
+(deffun sumup (7) 
+(if (equal x 0) 
+1 
+(+ x (sumup (- x 1)))
+)
+)
+(list 1 2 123f12)
+(liste 1 2 3) 
