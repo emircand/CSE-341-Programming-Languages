@@ -9,7 +9,6 @@ ID				[a-zA-Z][a-zA-Z0-9]*
 STRING 			["](.*?)["]
 COMMENT			";;".*
 KW_NIL      "nil"
-KW_LIST     "list"
 KW_APPEND   "append"
 KW_CONCAT   "concat"
 DEFF   		"deffun"
@@ -26,8 +25,8 @@ OP_SET      "set"
 OP_AND 		"and"
 OP_OR 		"or"
 OP_NOT		"not"
-OP_EQ    	"equal"
-OP_GT     	"less"
+OP_EQ    	"eq"
+OP_GT     	"gt"
 OP_PLUS			"+"
 OP_MINUS		"-"
 OP_DIV			"/"
@@ -46,9 +45,9 @@ OP_COMMA		","
 {OP_EQ}	    	{return OP_EQ;}
 {OP_GT}	    	{return OP_GT;}
 {KW_NIL}	    {return KW_NIL;}
-{KW_LIST}	    {return KW_LIST;}
 {OP_SET}	    {return OP_SET;}
 {DEFF}	    	{return DEFF;}
+{DEFV}	    	{return DEFV;}
 {KW_IF}		    {return KW_IF;}
 {KW_EXIT}	    {return KW_EXIT;}
 {KW_LOAD}	    {return KW_LOAD;}
