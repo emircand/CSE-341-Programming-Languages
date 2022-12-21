@@ -1,6 +1,6 @@
 (defvar delimiter " ")
-(defvar Operator (list "+" "-" "/" "*" "(" ")" ","))
-(defvar Keywords (list "and" "or" "not" "eq" "gt" "nil" "set" "defvar" "deffun" "while" "if" "load" "disp" "true" "false"))
+(defvar Operator (list "+" "-" "/" "*" "(" ")" "," "and" "or" "not" "eq" "gt" "set"))
+(defvar Keywords (list "nil" "defvar" "deffun" "while" "if" "load" "disp" "true" "false"))
 (defvar comment ";")
 (defvar cc 0)
 (defvar token-list (list))
@@ -206,7 +206,7 @@
         )
         (if (or (equal a nil) (equal b nil))
           (progn
-            (print "SYNTAX ERROR! Variable has not been created!")
+            (print "SYNTAX ERROR!")
             (return-from syntax nil))
           (return-from syntax (+ a b))
         )
@@ -222,7 +222,7 @@
         )
         (if (or (equal a nil) (equal b nil))
           (progn
-            (print "SYNTAX ERROR! Variable has not been created!")
+            (print "SYNTAX ERROR!")
             (return-from syntax nil))
           (return-from syntax (- a b))
         )
@@ -238,7 +238,7 @@
         )
         (if (or (equal a nil) (equal b nil))
           (progn
-            (print "SYNTAX ERROR! Variable has not been created!")
+            (print "SYNTAX ERROR!")
             (return-from syntax nil))
           (return-from syntax (floor a b))
         )
@@ -254,12 +254,12 @@
         )
         (if (or (equal a nil) (equal b nil))
           (progn
-            (print "SYNTAX ERROR! Variable has not been created!")
+            (print "SYNTAX ERROR!")
             (return-from syntax nil))
           (return-from syntax (* a b))
         )
       )
-      ((string-equal (nth 1 arg-list) "KW_SET")
+      ((string-equal (nth 1 arg-list) "OP_SET")
        (setq b (if (string-equal "OP" (nth 3 arg-list))
                    (syntax (sublist arg-list 3 (- (length arg-list) 1)))
                  (nth 3 arg-list)))
@@ -269,7 +269,7 @@
          b
       )
 
-        ( (string-equal (nth 1 arg-list) "KW_AND")  
+        ( (string-equal (nth 1 arg-list) "OP_AND")  
             (progn
                 (if (not (string-equal "OP" (nth 2 arg-list)))
                   (progn 
@@ -305,14 +305,14 @@
                 )
                 (if (or (equal a nil) (equal b nil))
                   (progn
-                     (print "SYNTAX ERROR! Variable has not been created!")
+                     (print "SYNTAX ERROR!")
                      (return-from syntax nil)
                   )
                   (return-from syntax (and a b))
                 )
             )
         )
-        ( (string-equal (nth 1 arg-list) "KW_OR")  
+        ( (string-equal (nth 1 arg-list) "OP_OR")  
             (progn
                 (if (not (string-equal "OP" (nth 2 arg-list)))
                   (progn 
@@ -349,14 +349,29 @@
                 
                 (if (or (equal a nil) (equal b nil))
                   (progn
-                     (print "SYNTAX ERROR! Variable has not been created!")
+                     (print "SYNTAX ERROR!")
                      (return-from syntax nil)
                   )
                   (return-from syntax (or a b))
                 )
             )
         )
-         ( (string-equal (nth 1 arg-list) "KW_NOT")  
+         ((string-equal (nth 1 arg-list) "KW_IF")
+            (let ((predicate (syntax (sublist arg-list 2 3)))
+                  (consequent (syntax (sublist arg-list 4 5)))
+                  (alternative (syntax (sublist arg-list 6 7))))
+            (if predicate
+               consequent
+               alternative))
+         )
+         ((string-equal (nth 1 arg-list) "KW_WHILE")
+            (let ((predicate (syntax (sublist arg-list 2 3)))
+                  (body (syntax (sublist arg-list 4 5))))
+         (loop while predicate
+            do
+            (setq predicate (syntax (sublist arg-list 2 3)))
+            (setq body (syntax (sublist arg-list 4 5))))))
+         ( (string-equal (nth 1 arg-list) "OP_NOT")  
                (progn
                 (if (not (string-equal "OP" (nth 2 arg-list)))
                   (progn 
@@ -373,14 +388,14 @@
                 
                 (if (equal a nil)
                   (progn
-                     (print "SYNTAX ERROR! Variable has not been created!")
+                     (print "SYNTAX ERROR!")
                      (return-from syntax nil)
                   )
                   (return-from syntax (not a))
                 )
             )
-          ) 
-         ((string-equal (nth 1 arg-list) "KW_EQ")
+         ) 
+         ((string-equal (nth 1 arg-list) "OP_EQ")
             (if (not (string-equal "OP" (nth 2 arg-list)))
                (progn
                   (setq a (if (isIdentifier (nth 2 arg-list))
@@ -406,13 +421,13 @@
                (setq b (syntax (sublist arg-list 6 (- (length arg-list) 1))))))
             (if (or (equal a nil) (equal b nil))
                (progn
-                  (print "SYNTAX ERROR! Variable has not been created!")
+                  (print "SYNTAX ERROR!")
                   (return-from syntax nil))
             (return-from syntax (equal a b)) 
             ) 
          )
          (
-         (string-equal (nth 1 arg-list) "KW_GT")
+         (string-equal (nth 1 arg-list) "OP_GT")
             (if (not (string-equal "OP" (nth 2 arg-list)))
                (progn
                   (setq a (if (isIdentifier (nth 2 arg-list))
@@ -437,7 +452,7 @@
                   (setq b (syntax (sublist arg-list 6 (- (length arg-list) 1))))))
                (if (or (equal a nil) (equal b nil))
                   (progn
-                  (print "SYNTAX ERROR! Variable has not been created!")
+                  (print "SYNTAX ERROR!")
                   (return-from syntax nil))
                (return-from syntax (> a b))
                )
@@ -468,7 +483,7 @@
                (setq b (syntax (sublist arg-list 6 (- (length arg-list) 1))))))
             (if (or (equal a nil) (equal b nil))
                (progn
-               (print "SYNTAX ERROR! Variable has not been created!")
+               (print "SYNTAX ERROR!")
                (return-from syntax nil))
             (return-from syntax (setq a b)))
          )
@@ -641,12 +656,6 @@ nil
 ; Prints tokens of keywords
 (defun getKeyword (var)
    (cond
-      ((string-equal var "and") (return-from getKeyword "KW_AND"))
-      ((string-equal var "or") (return-from getKeyword "KW_OR"))
-      ((string-equal var "not") (return-from getKeyword "KW_NOT"))
-      ((string-equal var "eq") (return-from getKeyword "KW_EQ"))
-      ((string-equal var "gt") (return-from getKeyword "KW_GT"))
-      ((string-equal var "set") (return-from getKeyword "KW_SET"))
       ((string-equal var "defvar") (return-from getKeyword "DEFV"))
       ((string-equal var "deffun") (return-from getKeyword "DEFF"))
       ((string-equal var "nil") (return-from getKeyword "KW_NIL"))
@@ -663,6 +672,12 @@ nil
 ; Prints token for operators
 (defun getOperator (var)
    (cond
+      ((string-equal var "and") (return-from getOperator "OP_AND"))
+      ((string-equal var "or") (return-from getOperator "OP_OR"))
+      ((string-equal var "not") (return-from getOperator "OP_NOT"))
+      ((string-equal var "eq") (return-from getOperator "OP_EQ"))
+      ((string-equal var "gt") (return-from getOperator "OP_GT"))
+      ((string-equal var "set") (return-from getOperator "OP_SET"))
       ((string-equal var "+") (return-from getOperator "OP_PLUS"))
       ((string-equal var "-") (return-from getOperator "OP_MINUS"))
       ((string-equal var "/") (return-from getOperator "OP_DIV"))
