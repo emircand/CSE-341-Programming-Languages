@@ -10,66 +10,46 @@
 ; gppinterpreter function
 ; Reads file (or user input) line by line, for each line calls split_line function if that line does not start with ";"
 (defun gppinterpreter (&optional input)
-(if (equal input nil)
-   (progn
+  "Read and process input from either the standard input or a file."
+  (if (equal input nil)
       (loop
          (print ">>>")
          (setf line (read-line))
          (setf line (string line))
          (if (not(string-equal (char line 0) comment))
-               (progn
-                  (setf line (string-trim '(#\Space #\Tab #\Newline) line))
-                  (split_line line)
-               )
-               (print "COMMENT")
-         )
-         (when (equal line nil) (return-from gppinterpreter nil))
-      )
-   )
-   (progn
-      (with-open-file (stream input)
-         (loop for line = (read-line stream nil)
-            while line
-            collect line
-            do
-            (if (not(= (length line) 0))
-               (if (not(string-equal (aref line 0) comment))
-                  (progn
-                     (setf line (string-trim '(#\Space #\Tab #\Newline) line))
-                     (split_line line)
-                  )
-                  (print "COMMENT")
-               )
-            )
-         )
-      )  
-   
-   )
-
-)
-)
+             (progn
+               (setf line (string-trim '(#\Space #\Tab #\Newline) line))
+               (split-line line))
+           (print "COMMENT"))
+         (when (equal line nil) (return-from gppinterpreter nil)))
+    (with-open-file (stream input)
+       (loop for line = (read-line stream nil)
+          while line
+          do (if (not(= (length line) 0))
+                 (if (not(string-equal (aref line 0) comment))
+                     (progn
+                       (setf line (string-trim '(#\Space #\Tab #\Newline) line))
+                       (split_line line))
+                   (print "COMMENT"))
+               )))))
 ; Splits line by delimiter. Calls split_token fuction to split the tokens if they are sticked ( For example "1)" will be "1" and ")" )
 (defun split_line (line)
-   (defvar _temp_ (list))
-   (loop for i from 0 to (- (length line) 1)
-      do
-     (if (or (string-equal (aref line i) delimiter) (= i (- (length line) 1))) 
-         (progn
-            (if (= i (- (length line) 1))
-               (setq _temp_ (append _temp_ (list (aref line i))))      
-            )
-            (split_token _temp_)
-            (setq _temp_ nil)
-         ) ;if it is true
-         (progn
-            (setq _temp_ (append _temp_ (list (aref line i))))
-
-         ) ;if it is null
-     ) 
-   )
-   (checkToken token-list)
-   (setq token-list nil)
+  "Split the given line into tokens based on the given delimiter."
+  (let ((temp nil))
+    (loop for i from 0 to (- (length line) 1)
+       do (if (or (string-equal (aref line i) delimiter) (= i (- (length line) 1)))
+                (progn
+                  (if (= i (- (length line) 1))
+                      (setq temp (append temp (list (aref line i))))
+                    )
+                  (split_token temp)
+                  (setq temp nil))
+              (progn
+                (setq temp (append temp (list (aref line i)))))))
+    (checktoken token-list)
+    (setq token-list nil))
 )
+
 ;Splits token if there is sticked words.
 (defun split_token (splitted)
    (setf word "")
@@ -198,11 +178,11 @@
       ((string-equal (nth 1 arg-list) "OP_PLUS")
         (if (string-equal (nth 2 arg-list) "OP")
           (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1))))
-          (setq a (parse-integer (nth 2 arg-list)))
+          (setq a (parse-fraction (nth 2 arg-list)))
         )
         (if (string-equal (nth 3 arg-list) "OP")
           (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1))))
-          (setq b (parse-integer (nth 3 arg-list)))
+          (setq b (parse-fraction (nth 3 arg-list)))
         )
         (if (or (equal a nil) (equal b nil))
           (progn
@@ -214,11 +194,11 @@
       ((string-equal (nth 1 arg-list) "OP_MINUS")
         (if (string-equal (nth 2 arg-list) "OP")
           (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1))))
-          (setq a (parse-integer (nth 2 arg-list)))
+          (setq a (parse-fraction (nth 2 arg-list)))
         )
         (if (string-equal (nth 3 arg-list) "OP")
           (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1))))
-          (setq b (parse-integer (nth 3 arg-list)))
+          (setq b (parse-fraction (nth 3 arg-list)))
         )
         (if (or (equal a nil) (equal b nil))
           (progn
@@ -230,11 +210,11 @@
       ((string-equal (nth 1 arg-list) "OP_DIV")
         (if (string-equal (nth 2 arg-list) "OP")
           (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1))))
-          (setq a (parse-integer (nth 2 arg-list)))
+          (setq a (parse-fraction (nth 2 arg-list)))
         )
         (if (string-equal (nth 3 arg-list) "OP")
           (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1))))
-          (setq b (parse-integer (nth 3 arg-list)))
+          (setq b (parse-fraction (nth 3 arg-list)))
         )
         (if (or (equal a nil) (equal b nil))
           (progn
@@ -246,11 +226,11 @@
       ((string-equal (nth 1 arg-list) "OP_MULT")
         (if (string-equal (nth 2 arg-list) "OP")
           (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1))))
-          (setq a (parse-integer (nth 2 arg-list)))
+          (setq a (parse-fraction (nth 2 arg-list)))
         )
         (if (string-equal (nth 3 arg-list) "OP")
           (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1))))
-          (setq b (parse-integer (nth 3 arg-list)))
+          (setq b (parse-fraction (nth 3 arg-list)))
         )
         (if (or (equal a nil) (equal b nil))
           (progn
@@ -274,8 +254,8 @@
                 (if (not (string-equal "OP" (nth 2 arg-list)))
                   (progn 
                      (if (isIdentifier (nth 2 arg-list))
-                     (setq a (parse-integer (getValue (nth 2 arg-list))))
-                     (setq a (parse-integer (nth 2 arg-list)))
+                     (setq a (parse-fraction (getValue (nth 2 arg-list))))
+                     (setq a (parse-fraction (nth 2 arg-list)))
                      )
                   )
                     (progn
@@ -287,8 +267,8 @@
                     (if (not (string-equal "OP" (nth 3 arg-list)))
                         (progn 
                            (if (isIdentifier (nth 3 arg-list))
-                           (setq b (parse-integer (getValue (nth 3 arg-list))))
-                           (setq b (parse-integer (nth 3 arg-list)))
+                           (setq b (parse-fraction (getValue (nth 3 arg-list))))
+                           (setq b (parse-fraction (nth 3 arg-list)))
                            )
                         )
                         (setq b (syntax (sublist arg-list 3  (- (length arg-list) 1))))
@@ -296,8 +276,8 @@
                     (if (not (string-equal "OP" (nth 6 arg-list)))
                         (progn 
                            (if (isIdentifier (nth 6 arg-list))
-                           (setq b (parse-integer (getValue (nth 6 arg-list))))
-                           (setq b (parse-integer (nth 6 arg-list)))
+                           (setq b (parse-fraction (getValue (nth 6 arg-list))))
+                           (setq b (parse-fraction (nth 6 arg-list)))
                            )
                         )
                         (setq b (syntax (sublist arg-list 6  (- (length arg-list) 1))))
@@ -317,8 +297,8 @@
                 (if (not (string-equal "OP" (nth 2 arg-list)))
                   (progn 
                      (if (isIdentifier (nth 2 arg-list))
-                     (setq a (parse-integer (getValue (nth 2 arg-list))))
-                     (setq a (parse-integer (nth 2 arg-list)))
+                     (setq a (parse-fraction (getValue (nth 2 arg-list))))
+                     (setq a (parse-fraction (nth 2 arg-list)))
                      )
                   )
                     (progn
@@ -330,8 +310,8 @@
                     (if (not (string-equal "OP" (nth 3 arg-list)))
                         (progn 
                            (if (isIdentifier (nth 3 arg-list))
-                           (setq b (parse-integer (getValue (nth 3 arg-list))))
-                           (setq b (parse-integer (nth 3 arg-list)))
+                           (setq b (parse-fraction (getValue (nth 3 arg-list))))
+                           (setq b (parse-fraction (nth 3 arg-list)))
                            )
                         )
                         (setq b (syntax (sublist arg-list 3  (- (length arg-list) 1))))
@@ -339,8 +319,8 @@
                     (if (not (string-equal "OP" (nth 6 arg-list)))
                         (progn 
                            (if (isIdentifier (nth 6 arg-list))
-                           (setq b (parse-integer (getValue (nth 6 arg-list))))
-                           (setq b (parse-integer (nth 6 arg-list)))
+                           (setq b (parse-fraction (getValue (nth 6 arg-list))))
+                           (setq b (parse-fraction (nth 6 arg-list)))
                            )
                         )
                         (setq b (syntax (sublist arg-list 6  (- (length arg-list) 1))))
@@ -376,8 +356,8 @@
                 (if (not (string-equal "OP" (nth 2 arg-list)))
                   (progn 
                      (if (isIdentifier (nth 2 arg-list))
-                     (setq a (parse-integer (getValue (nth 2 arg-list))))
-                     (setq a (parse-integer (nth 2 arg-list)))
+                     (setq a (parse-fraction (getValue (nth 2 arg-list))))
+                     (setq a (parse-fraction (nth 2 arg-list)))
                      )
                   )
                     (progn
@@ -385,7 +365,6 @@
                         (setq f_exp 1)
                     )
                 )
-                
                 (if (equal a nil)
                   (progn
                      (print "SYNTAX ERROR!")
@@ -399,8 +378,8 @@
             (if (not (string-equal "OP" (nth 2 arg-list)))
                (progn
                   (setq a (if (isIdentifier (nth 2 arg-list))
-                              (parse-integer (getValue (nth 2 arg-list)))
-                           (parse-integer (nth 2 arg-list))))
+                              (parse-fraction (getValue (nth 2 arg-list)))
+                           (parse-fraction (nth 2 arg-list))))
                   (setq f_exp 1)
                )
             (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1)))))
@@ -408,15 +387,15 @@
                (if (not (string-equal "OP" (nth 3 arg-list)))
                   (progn
                      (setq b (if (isIdentifier (nth 3 arg-list))
-                                 (parse-integer (getValue (nth 3 arg-list)))
-                              (parse-integer (nth 3 arg-list))))
+                                 (parse-fraction (getValue (nth 3 arg-list)))
+                              (parse-fraction (nth 3 arg-list))))
                      (setq f_exp 1))
                   (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1)))))
             (if (not (string-equal "OP" (nth 6 arg-list)))
                   (progn
                   (setq b (if (isIdentifier (nth 6 arg-list))
-                              (parse-integer (getValue (nth 6 arg-list)))
-                              (parse-integer (nth 6 arg-list))))
+                              (parse-fraction (getValue (nth 6 arg-list)))
+                              (parse-fraction (nth 6 arg-list))))
                   (setq f_exp 1))
                (setq b (syntax (sublist arg-list 6 (- (length arg-list) 1))))))
             (if (or (equal a nil) (equal b nil))
@@ -431,23 +410,23 @@
             (if (not (string-equal "OP" (nth 2 arg-list)))
                (progn
                   (setq a (if (isIdentifier (nth 2 arg-list))
-                              (parse-integer (getValue (nth 2 arg-list)))
-                           (parse-integer (nth 2 arg-list))))
+                              (parse-fraction (getValue (nth 2 arg-list)))
+                           (parse-fraction (nth 2 arg-list))))
                   (setq f_exp 1))
                (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1)))))
             (if (equal f_exp 0)
                (if (not (string-equal "OP" (nth 3 arg-list)))
                   (progn
                      (setq b (if (isIdentifier (nth 3 arg-list))
-                                 (parse-integer (getValue (nth 3 arg-list)))
-                              (parse-integer (nth 3 arg-list))))
+                                 (parse-fraction (getValue (nth 3 arg-list)))
+                              (parse-fraction (nth 3 arg-list))))
                      (setq f_exp 1))
                   (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1)))))
                (if (not (string-equal "OP" (nth 6 arg-list)))
                   (progn
                   (setq b (if (isIdentifier (nth 6 arg-list))
-                              (parse-integer (getValue (nth 6 arg-list)))
-                              (parse-integer (nth 6 arg-list))))
+                              (parse-fraction (getValue (nth 6 arg-list)))
+                              (parse-fraction (nth 6 arg-list))))
                   (setq f_exp 1))
                   (setq b (syntax (sublist arg-list 6 (- (length arg-list) 1))))))
                (if (or (equal a nil) (equal b nil))
@@ -462,23 +441,23 @@
          (if (not (string-equal "OP" (nth 2 arg-list)))
             (progn
                (setq a (if (isIdentifier (nth 2 arg-list))
-                           (parse-integer (getValue (nth 2 arg-list)))
-                         (parse-integer (nth 2 arg-list))))
+                           (parse-fraction (getValue (nth 2 arg-list)))
+                         (parse-fraction (nth 2 arg-list))))
                (setq f_exp 1))
             (setq a (syntax (sublist arg-list 2 (- (length arg-list) 1)))))
          (if (equal f_exp 0)
             (if (not (string-equal "OP" (nth 3 arg-list)))
                (progn
                   (setq b (if (isIdentifier (nth 3 arg-list))
-                               (parse-integer (getValue (nth 3 arg-list)))
-                             (parse-integer (nth 3 arg-list))))
+                               (parse-fraction (getValue (nth 3 arg-list)))
+                             (parse-fraction (nth 3 arg-list))))
                   (setq f_exp 1))
                (setq b (syntax (sublist arg-list 3 (- (length arg-list) 1)))))
             (if (not (string-equal "OP" (nth 6 arg-list)))
                (progn
                  (setq b (if (isIdentifier (nth 6 arg-list))
-                             (parse-integer (getValue (nth 6 arg-list)))
-                           (parse-integer (nth 6 arg-list))))
+                             (parse-fraction (getValue (nth 6 arg-list)))
+                           (parse-fraction (nth 6 arg-list))))
                  (setq f_exp 1))
                (setq b (syntax (sublist arg-list 6 (- (length arg-list) 1))))))
             (if (or (equal a nil) (equal b nil))
@@ -553,28 +532,15 @@ nil
    )    
 )
 
-
-
-
-
 ; Checks the parameter is identifier or not
 (defun isIdentifier (var)
-   (setq returnValue T)
-   (loop for i from 0 to (- (length var) 1)
-      do
-      (if (= i 0)
-         (if (alpha-char-p (aref var i))
-            (setq returnValue T)
-            (return-from isIdentifier nil)
-         )
-         (if (or (alpha-char-p (aref var i)) (isDigit (aref var i)))
-            (setq returnValue T)
-            (return-from isIdentifier nil)
-         )
-      )
-   )
-   (return-from isIdentifier returnValue)
-)
+  "Check if the given string is a valid identifier."
+  (loop for i from 0 to (- (length var) 1)
+     do (if (or (alpha-char-p (aref var i)) (is-digit (aref var i)))
+            t
+          (return-from isIdentifier nil)))
+  t)
+
 
 ; Checks the character is digit or not
 (defun isDigit (character)
@@ -589,7 +555,7 @@ nil
 ; Checks the value rules for integers 
 (defun isValueInteger (var)
    (setq returnValue T)
-   (if (= (length var) 1)
+  (if (= (length var) 1)
       (if (string-equal (aref var 0) "0")
          (return-from isValueInteger T)
          (if (isDigit (aref var 0))
@@ -598,7 +564,7 @@ nil
          )
       )
       (progn
-         (loop for i from 0 to (- (length var) 1)
+    (loop for i from 0 to (- (length var) 1)
              do
             (if (= i 0)
                (if (string-equal (aref var i) "0")
@@ -618,41 +584,19 @@ nil
       )
    )
 )
-; Checks the value rules for real numbers
 (defun isValueReal (var)
-
-   (setq returnValue T)
-   (setq right_side 0)
-   (loop for i from 0 to (- (length var) 1)
-      do
-      (if (= right_side 0)
-         (progn
-            (if (= i 0)
-               (if (string-equal (aref var i) "0")
-                     (return-from isValueReal nil)
-                     (if (isDigit (aref var i))
-                        (setq returnValue T)
-                        (return-from isValueReal nil)
-                     )
-               )
-               (if (isDigit (aref var i))
-                  (setq returnValue T)
-                  (if (string-equal "f" (aref var i))
-                     (setq right_side 1)
-                     (return-from isValueReal nil)
-                  )
-               )
-            )
-         ) ; left_side
-         
-         (if (isDigit (aref var i))
-            (setq returnValue T)
-            (return-from isValueReal nil) 
-         )   ; right_side
-      )
-   )
-   (return-from isValueReal returnValue)
-)
+  "Check if the given string is a valid real number."
+  (let ((left-side-done nil))
+    (loop for i from 0 to (- (length var) 1)
+       do (cond
+           ((not left-side-done)
+            (if (isDigit (aref var i))
+                (setf left-side-done t)
+              (return-from isValueReal nil)))
+           ((isDigit (aref var i)) t)
+           ((string-equal "f" (aref var i)) (setf left-side-done t) t)
+           (t (return-from isValueReal nil))))
+    t))
 ; Prints tokens of keywords
 (defun getKeyword (var)
    (cond
@@ -709,6 +653,15 @@ nil
    )
    (return-from isWord T)
 )
+
+(defun parse-fraction (string)
+  (let ((f-pos (position #\f string)))
+    (if f-pos
+        (let ((num1 (parse-integer (subseq string 0 f-pos)))
+              (num2 (parse-integer (subseq string (1+ f-pos)))))
+          (return-from parse-fraction (/ (* num1 1.0) num2)))
+      (error "String does not contain 'f' character"))))
+
 ; Starts the lisp program and calls gppinterpreter function (Which is above)
 (defun start ()
    (terpri)
