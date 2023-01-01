@@ -1,26 +1,26 @@
-:- dynamic room/4.
-:- dynamic course/5.
+:- dynamic room/6.
+:- dynamic course/7.
 :- dynamic student/3.
 % room(id, capacity, hours[], occupancy[], equipment, handicapped access)
 room(z23, 25, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([8,9], cse241)], smartboard, access).
 room(z06, 130, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  projector, notAccess).
 room(z10, 78, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  projector, access).
 room(z12, 54, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  _, notAccess).
-room(amfi, 42, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  _, access).
+room(amfi, 300, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  _, access).
 
 
 % course(id, instructor, capacity, hours[], room, equipment, handicapped access)
 course(cse241, ysa, 180, [8, 9], z06, projector, notHandicapped).
-course(cse341, Genc, 120, [10, 11], z23, smartboard, handicapped).
-course(cse231, Habil, 70, [12, 13], z10, lab, notHandicapped).
-course(cse343, Habil, 100, [13, 14], z12, projector, handicapped).
+course(cse341, genc, 120, [10, 11], z23, smartboard, handicapped).
+course(cse231, habil, 70, [12, 13], z10, projector, notHandicapped).
+course(cse343, habil, 100, [13, 14], z12, projector, handicapped).
 course(cse332, ysa, 180, [12, 13], z06, projector, handicapped).
-course(cse102, Genc, 100, [15, 16], z23 , smartboard, notHandicapped).
+course(cse102, genc, 100, [15, 16], z23 , smartboard, notHandicapped).
 
 % instructor(id, courses[], preference)
 instructor(ysa, [cse241, cse332], projector).
-instructor(Genc, [cse102, cse341], projector).
-instructor(Habil, [cse231, cse343], lab).
+instructor(genc, [cse102, cse341], projector).
+instructor(habil, [cse231, cse343], lab).
 
 % student(id, courses[], handicapped)
 student(1, [cse341, cse231], notHandicapped).
@@ -30,13 +30,13 @@ student(4, [cse332, cse341], notHandicapped).
 
 % add new student
 addStudent(ID, Courses, Handicapped) :-
-    maplist(canEnroll(ID), Courses), % check if the student can be enrolled in all of the specified courses
-    assert(student(ID, Courses, Handicapped)), % add the student to the database
+    maplist(canEnroll(ID, Handicapped), Courses), % check if the student can be enrolled in all of the specified courses
+    assert(student(ID, [Courses], Handicapped)), % add the student to the database
     write('Student added succesfully').
 
 % add new course
-addCourse(ID, Instructor, Capacity, Hours, Room, Handicapped) :-
-    assert(course(ID, Instructor, Capacity, Hours, Room, Handicapped)),
+addCourse(ID, Instructor, Capacity, Hours, Room, Equipment, Handicapped) :-
+    assert(course(ID, Instructor, Capacity, Hours, Room, Equipment, Handicapped)),
     instructor(Instructor, Courses, _),
     \+ member(ID, Courses), % check if the course is already in the instructor's course list
     append(Courses, [ID], NewCourses), % add the course to the instructor's course list
@@ -84,16 +84,30 @@ schedulingConflict(Course, Room) :-
          format('Scheduling conflict detected between course ~w (~w) and room ~w', [Course, Hours, Room]));
     true.
 
-% Check which room can be assigned to a given class. 
-% Find a suitable room for a given class
-findRoom(Course, Room) :-
-    course(Course, _, Capacity, _, _, Equipment, Handicapped),
-    room(Room, Capacity, _, _, Equipment, Handicapped).
+% Check which room can be assigned to a given class.
+findRooms(Course, Rooms) :-
+    course(Course, _, _, _, _, _, Handicapped),
+    findall(Room, (room(Room, _, _, _, _, Handicapped)), Rooms).
 
-% Check which room can be assigned to which classes.
-% Find the classes that can be assigned to a given room
+
 findClasses(Room, Classes) :-
-    findall(Course, (course(Course, _, _, _, Room, _, _)), Classes).
+    room(Room, Capacity, _, _, Equipment, Handicapped),
+    findall(Course, (course(Course, _, CourseCapacity, _, _, CourseEquipment, CourseHandicapped),
+                     CourseCapacity =< Capacity,
+                     Equipment = CourseEquipment,
+                     Handicapped = CourseHandicapped),
+            Classes).
+
+
+% Check which classes a student can be assigned.
+findAssignments(Student, Classes) :-
+    student(Student, _, Handicapped),
+    findall(Course, (course(Course, _, _, _, _, _, Handicapped)), Classes).
+
+
+canEnroll(Student, Handicapped, Course) :-
+    course(Course, _, _, _, _, _, CourseHandicapped),
+    Handicapped = CourseHandicapped.
 
 % Check whether a student can be enrolled to a given class.
 canEnroll(Student, Course) :-
@@ -101,10 +115,5 @@ canEnroll(Student, Course) :-
     course(Course, _, _, _, _, _, CourseHandicapped),
     Handicapped = CourseHandicapped.
 
-% Check which classes a student can be assigned.
-% Find the classes that a student can be assigned to
-findAssignments(Student, Classes) :-
-    student(Student, _, Handicapped),
-    findall(Course, (course(Course, _, _, _, _, _, Handicapped)), Classes).
 
 
