@@ -1,4 +1,4 @@
 target: test
 
 test: 
-		swipl -s part1.pl
+		swipl -s hw04.pl

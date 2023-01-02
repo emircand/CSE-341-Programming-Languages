@@ -1,32 +1,32 @@
 :- dynamic room/6.
 :- dynamic course/7.
 :- dynamic student/3.
-% room(id, capacity, hours[], occupancy[], equipment, handicapped access)
-room(z23, 25, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([8,9], cse241)], smartboard, access).
-room(z06, 130, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  projector, notAccess).
-room(z10, 78, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  projector, access).
-room(z12, 54, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  _, notAccess).
-room(amfi, 300, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  _, access).
+% room(id, capacity, hours[], occupancy[], equipment, Handicapped access)
+room(z23, 25, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([10,11], cse341), occupancy([15,16], cse102)], smartboard, access).
+room(z06, 130, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([8,9], cse241), occupancy([12,13], cse332)],  projector, notAccess).
+room(z10, 78, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([12,13], cse231)],  projector, access).
+room(z12, 54, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([13,14], cse343)],  _, notAccess).
+room(amfi, 300, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  projector, access).
 
 
-% course(id, instructor, capacity, hours[], room, equipment, handicapped access)
-course(cse241, ysa, 180, [8, 9], z06, projector, notHandicapped).
-course(cse341, genc, 120, [10, 11], z23, smartboard, handicapped).
-course(cse231, habil, 70, [12, 13], z10, projector, notHandicapped).
-course(cse343, habil, 100, [13, 14], z12, projector, handicapped).
-course(cse332, ysa, 180, [12, 13], z06, projector, handicapped).
-course(cse102, genc, 100, [15, 16], z23 , smartboard, notHandicapped).
+% course(id, instructor, capacity, hours[], room, equipment[], Handicapped access)
+course(cse241, ysa, 180, [8, 9], z06, projector, access).
+course(cse341, genc, 120, [10, 11], z23, smartboard, access).
+course(cse231, habil, 70, [12, 13], z10, projector, notAccess).
+course(cse343, habil, 100, [13, 14], z12, projector, access).
+course(cse332, ysa, 180, [12, 13], z06, projector, access).
+course(cse102, genc, 100, [15, 16], z23 , smartboard, notAccess).
 
 % instructor(id, courses[], preference)
 instructor(ysa, [cse241, cse332], projector).
 instructor(genc, [cse102, cse341], projector).
 instructor(habil, [cse231, cse343], lab).
 
-% student(id, courses[], handicapped)
-student(1, [cse341, cse231], notHandicapped).
-student(2, [cse102, cse332], handicapped).
-student(3, [cse241, cse231], notHandicapped).
-student(4, [cse332, cse341], notHandicapped).
+% student(id, courses[], access)
+student(1, [cse341, cse231], notAccess).
+student(2, [cse102, cse332], access).
+student(3, [cse241, cse231], notAccess).
+student(4, [cse332, cse341], notAccess).
 
 % add new student
 addStudent(ID, Courses, Handicapped) :-
@@ -84,19 +84,25 @@ schedulingConflict(Course, Room) :-
          format('Scheduling conflict detected between course ~w (~w) and room ~w', [Course, Hours, Room]));
     true.
 
-% Check which room can be assigned to a given class.
+% Check which rooms can be assigned to a given class.
 findRooms(Course, Rooms) :-
-    course(Course, _, _, _, _, _, Handicapped),
-    findall(Room, (room(Room, _, _, _, _, Handicapped)), Rooms).
+    course(Course, _, Capacity, Hours, _, Equipment, Handicapped),
+    findall(Room, (room(Room, RoomCapacity, RoomHours, Occupancy, Equipment, Handicapped),
+    RoomCapacity >= Capacity,
+    not(member(Hours, Occupancy)),
+    not(member(RoomHours, Hours))),
+    Rooms).
 
 
+% Check which classes can be assigned to a given room.
 findClasses(Room, Classes) :-
-    room(Room, Capacity, _, _, Equipment, Handicapped),
-    findall(Course, (course(Course, _, CourseCapacity, _, _, CourseEquipment, CourseHandicapped),
-                     CourseCapacity =< Capacity,
-                     Equipment = CourseEquipment,
-                     Handicapped = CourseHandicapped),
-            Classes).
+    room(Room, RoomCapacity, RoomHours, Occupancy, RoomEquipment, RoomHandicapped),
+    findall(Course, (course(Course, _, CourseCapacity, CourseHours, _, CourseEquipment, CourseHandicapped),
+    CourseCapacity =< RoomCapacity,
+    CourseEquipment = RoomEquipment,
+    CourseHandicapped = RoomHandicapped,
+    not(member((CourseHours, Course), Occupancy))),
+    Classes).
 
 
 % Check which classes a student can be assigned.
@@ -116,4 +122,23 @@ canEnroll(Student, Course) :-
     Handicapped = CourseHandicapped.
 
 
+% knowledge base
+% schedule(from, to, cost).
+schedule(istanbul, izmir, 2).
+schedule(istanbul, ankara, 1).
+schedule(istanbul, rize, 4).
+schedule(rize, ankara, 5).
+schedule(izmir, ankara, 6).
+schedule(ankara, van, 4).
+schedule(van, gaziantep, 3).
+schedule(ankara, diyarbakir, 8).
+schedule(antalya, izmir, 2).
+schedule(diyarbakir, antalya, 4).
+schedule(erzincan, antalya, 3).
+schedule(canakkale, erzincan, 6).
+schedule(canakkale, edirne, 3).
+schedule(edirne, tekirdag, 1).
 
+connection(X, Y, C) :- connected(X, Y, C, []).
+connected(X, Y, C, Visited) :- schedule(X, Y, C), \+ member(Y, Visited).
+connected(X, Y, C, Visited) :- schedule(X, Z, C1), \+ member(Z, Visited), connected(Z, Y, C2, [Z|Visited]), C is C1 + C2.
