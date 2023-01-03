@@ -1,13 +1,13 @@
 :- dynamic room/6.
 :- dynamic course/7.
 :- dynamic student/3.
+:- dynamic instructor/3.
 % room(id, capacity, hours[], occupancy[], equipment, Handicapped access)
 room(z23, 25, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([10,11], cse341), occupancy([15,16], cse102)], smartboard, access).
 room(z06, 130, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([8,9], cse241), occupancy([12,13], cse332)],  projector, notAccess).
 room(z10, 78, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([12,13], cse231)],  projector, access).
 room(z12, 54, [8, 9, 10, 11, 12, 13, 14, 15, 16], [occupancy([13,14], cse343)],  _, notAccess).
 room(amfi, 300, [8, 9, 10, 11, 12, 13, 14, 15, 16], [],  projector, access).
-
 
 % course(id, instructor, capacity, hours[], room, equipment[], Handicapped access)
 course(cse241, ysa, 180, [8, 9], z06, projector, access).
@@ -30,8 +30,8 @@ student(4, [cse332, cse341], notAccess).
 
 % add new student
 addStudent(ID, Courses, Handicapped) :-
-    maplist(canEnroll(ID, Handicapped), Courses), % check if the student can be enrolled in all of the specified courses
-    assert(student(ID, [Courses], Handicapped)), % add the student to the database
+    maplist(canEnroll(Handicapped), Courses), % check if the student can be enrolled in all of the specified courses
+    assert(student(ID, Courses, Handicapped)), % add the student to the database
     write('Student added succesfully').
 
 % add new course
@@ -96,7 +96,7 @@ findRooms(Course, Rooms) :-
 
 % Check which classes can be assigned to a given room.
 findClasses(Room, Classes) :-
-    room(Room, RoomCapacity, RoomHours, Occupancy, RoomEquipment, RoomHandicapped),
+    room(Room, RoomCapacity, _, Occupancy, RoomEquipment, RoomHandicapped),
     findall(Course, (course(Course, _, CourseCapacity, CourseHours, _, CourseEquipment, CourseHandicapped),
     CourseCapacity =< RoomCapacity,
     CourseEquipment = RoomEquipment,
@@ -111,7 +111,7 @@ findAssignments(Student, Classes) :-
     findall(Course, (course(Course, _, _, _, _, _, Handicapped)), Classes).
 
 
-canEnroll(Student, Handicapped, Course) :-
+canEnroll(Handicapped, Course) :-
     course(Course, _, _, _, _, _, CourseHandicapped),
     Handicapped = CourseHandicapped.
 
